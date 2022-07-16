@@ -4,26 +4,39 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import AuthUser from "../../utils/AuthUser";
 
+const PAGE_NUMBER = 1;
+
 const Home = () => {
     const navigate = useNavigate();
 
     const { token } = AuthUser();
     const [users, setUser] = useState([]);
+    const [page, setPage] = useState(PAGE_NUMBER);
 
     useEffect(() => {
         loadUsers();
-    }, []);
+    }, [page]);
+
+    const scrolToEnd = async () => {
+        setPage(page+1);
+    };
+
+    window.onscroll = function() {
+        if(window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight){
+            scrolToEnd();
+        }
+    }
 
     const loadUsers = async () => {
-        console.log("token: " + token);
+        // console.log("token: " + token);
         if (token) {
-            const result = await axios.get(`/users/?perPage=10&page=0`, {
+            const result = await axios.get(`/users/?perPage=20&page=${page}`, {
                 headers: {
                     "Content-type": "application/json",
                     "auth-token": token.replace(/['"]+/g, '')
                 }
             });
-            setUser(result.data.reverse());
+            setUser([...users, ...result.data.reverse()]);
         }
         else
             navigate('/login');
